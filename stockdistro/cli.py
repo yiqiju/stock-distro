@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -65,12 +66,15 @@ def _fit_dashboard_time_range() -> None:
         return
     start = date.fromisoformat(min(a["period_start"] for a in accounts)) - timedelta(days=20)
     end = date.fromisoformat(max(a["period_end"] for a in accounts)) + timedelta(days=20)
-    doc = json.loads(dash.read_text())
+    doc = json.loads(dash.read_text(encoding="utf-8"))
     doc["time"] = {"from": f"{start}T00:00:00.000Z", "to": f"{end}T00:00:00.000Z"}
-    dash.write_text(json.dumps(doc, indent=1) + "\n")
+    dash.write_text(json.dumps(doc, indent=1) + "\n", encoding="utf-8")
 
 
 def main() -> None:
+    # Windows consoles default to a legacy code page that cannot print ✓ / →
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(prog="stockdistro", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)

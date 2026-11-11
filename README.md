@@ -9,16 +9,37 @@ benchmarks.csv ───prices──▶ data/benchmark_prices.csv ────�
 
 ## Use
 
-```bash
-# 1. drop monthly statement PDFs into statements/, then:
-uv run stockdistro refresh        # parse PDFs, download benchmark prices, rebuild the database
+Put your monthly statement PDFs in `statements/`, then run the bootstrap script for your OS.
+Both scripts do the same thing and are safe to re-run (finished steps are skipped):
 
-# 2. start Grafana (leave it running) and open http://127.0.0.1:3000
-./run-grafana.sh
+1. install `uv` and Grafana if they are missing (Homebrew on macOS/Linux, `winget` on Windows);
+2. install the SQLite data source plugin into `grafana/runtime/plugins`;
+3. run `uv run stockdistro refresh` (parse PDFs, download benchmark prices, rebuild the database);
+4. start Grafana in that terminal at http://127.0.0.1:3000. Ctrl+C stops it.
+
+**macOS / Linux**
+
+```bash
+./bootstrap.sh
 ```
 
-Re-run `refresh` whenever you add a statement; the dashboard picks up the new
-database on its next refresh. Everything stays on this machine — `statements/`
+**Windows** (PowerShell, in the project folder; also opens the dashboard in your browser)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\bootstrap.ps1
+```
+
+| | `bootstrap.sh` | `bootstrap.ps1` |
+|---|---|---|
+| set up and rebuild data only | `--no-start` | `-NoStart` |
+| another port | `--port 3001` | `-Port 3001` |
+| Grafana in a non-standard folder | `GRAFANA_HOME=/path` | `-GrafanaHome "D:\tools\grafana"` |
+
+If the port is taken (on Windows the Grafana installer can register its own service on 3000),
+the scripts move to the next free port and print the address. While Grafana is running,
+`uv run stockdistro refresh` in another terminal is enough to load a new statement.
+
+Everything stays on this machine — `statements/`
 and `data/` are git-ignored, Grafana listens on localhost only.
 
 Other commands: `ingest`, `prices`, `build` (the three steps of `refresh`),
@@ -61,7 +82,7 @@ that writes these two files:
   cost_basis, unrealized_gain, est_annual_income, source_file`
 
 SQLite is read by Grafana through the `frser-sqlite-datasource` plugin (installed into
-`grafana/runtime/plugins` by `run-grafana.sh`).
+`grafana/runtime/plugins` by the bootstrap script).
 
 ## Layout
 

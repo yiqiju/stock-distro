@@ -270,7 +270,7 @@ for p in panels:
 
 out = Path(__file__).resolve().parent.parent / "grafana/dashboards/portfolio.json"
 try:
-    time_range = json.loads(out.read_text())["time"]   # keep the range `stockdistro build` set
+    time_range = json.loads(out.read_text(encoding="utf-8"))["time"]   # keep the range `stockdistro build` set
 except Exception:
     time_range = {"from": "now-3y", "to": "now"}
 
@@ -291,5 +291,5 @@ dashboard = {
     ]},
     "panels": panels,
 }
-out.write_text(json.dumps(dashboard, indent=1) + "\n")
+out.write_text(json.dumps(dashboard, indent=1) + "\n", encoding="utf-8")
 print(f"wrote {out}")

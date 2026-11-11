@@ -48,7 +48,7 @@ PRICE_COLUMNS = ["date", "symbol", "name", "adj_close"]
 
 def write_csv(path: Path, columns: list[str], rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="") as f:
+    with path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=columns, extrasaction="ignore")
         w.writeheader()
         for row in rows:
@@ -56,7 +56,7 @@ def write_csv(path: Path, columns: list[str], rows: list[dict]) -> None:
 
 
 def read_csv(path: Path) -> list[dict]:
-    with path.open(newline="") as f:
+    with path.open(newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
