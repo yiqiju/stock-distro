@@ -1,0 +1,8 @@
+# personal financial data never leaves this machine
+statements/*
+!statements/sample-new-fidelity-acnt-stmt.pdf
+data/
+grafana/runtime/
+.venv/
+__pycache__/
+.DS_Store

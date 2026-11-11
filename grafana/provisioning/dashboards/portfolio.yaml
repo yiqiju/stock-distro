@@ -1,0 +1,8 @@
+apiVersion: 1
+providers:
+  - name: portfolio
+    type: file
+    allowUiUpdates: true
+    updateIntervalSeconds: 10
+    options:
+      path: ${STOCKDISTRO_DASHBOARDS}

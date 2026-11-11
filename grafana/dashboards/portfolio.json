@@ -1,0 +1,1415 @@
+{
+ "uid": "fidelity-portfolio",
+ "title": "Fidelity Portfolio",
+ "tags": [
+  "portfolio"
+ ],
+ "schemaVersion": 39,
+ "editable": true,
+ "graphTooltip": 1,
+ "timezone": "utc",
+ "time": {
+  "from": "2014-07-12T00:00:00.000Z",
+  "to": "2015-08-20T00:00:00.000Z"
+ },
+ "refresh": "",
+ "templating": {
+  "list": [
+   {
+    "name": "account",
+    "label": "Account",
+    "type": "query",
+    "datasource": {
+     "type": "frser-sqlite-datasource",
+     "uid": "portfolio-sqlite"
+    },
+    "query": "SELECT DISTINCT account FROM account_periods ORDER BY 1",
+    "definition": "SELECT DISTINCT account FROM account_periods ORDER BY 1",
+    "multi": true,
+    "includeAll": true,
+    "refresh": 2,
+    "sort": 0,
+    "current": {
+     "text": [
+      "All"
+     ],
+     "value": [
+      "$__all"
+     ]
+    }
+   },
+   {
+    "name": "asset_class",
+    "label": "Asset class",
+    "type": "query",
+    "datasource": {
+     "type": "frser-sqlite-datasource",
+     "uid": "portfolio-sqlite"
+    },
+    "query": "SELECT DISTINCT asset_class FROM holdings ORDER BY 1",
+    "definition": "SELECT DISTINCT asset_class FROM holdings ORDER BY 1",
+    "multi": true,
+    "includeAll": true,
+    "refresh": 2,
+    "sort": 0,
+    "current": {
+     "text": [
+      "All"
+     ],
+     "value": [
+      "$__all"
+     ]
+    }
+   },
+   {
+    "name": "holding",
+    "label": "Holding",
+    "type": "query",
+    "datasource": {
+     "type": "frser-sqlite-datasource",
+     "uid": "portfolio-sqlite"
+    },
+    "query": "SELECT DISTINCT holding FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) ORDER BY 1",
+    "definition": "SELECT DISTINCT holding FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) ORDER BY 1",
+    "multi": true,
+    "includeAll": true,
+    "refresh": 2,
+    "sort": 0,
+    "current": {
+     "text": [
+      "All"
+     ],
+     "value": [
+      "$__all"
+     ]
+    }
+   },
+   {
+    "name": "benchmark",
+    "label": "Benchmark",
+    "type": "query",
+    "datasource": {
+     "type": "frser-sqlite-datasource",
+     "uid": "portfolio-sqlite"
+    },
+    "query": "SELECT DISTINCT name FROM benchmark_prices ORDER BY 1",
+    "definition": "SELECT DISTINCT name FROM benchmark_prices ORDER BY 1",
+    "multi": true,
+    "includeAll": true,
+    "refresh": 2,
+    "sort": 0,
+    "current": {
+     "text": [
+      "S&P 500 (SPY)",
+      "Russell 1000 (IWB)"
+     ],
+     "value": [
+      "S&P 500 (SPY)",
+      "Russell 1000 (IWB)"
+     ]
+    }
+   }
+  ]
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "row",
+   "title": "Overview \u2014 latest statement in the selected time range",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "Market value (selected holdings)",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 1,
+    "w": 5,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000)",
+     "rawQueryText": "SELECT SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000)",
+     "timeColumns": []
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "currencyUSD",
+     "decimals": 0,
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "blue"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "Unrealized gain / loss",
+   "description": "Market value minus cost basis, for selected positions where the statement reports a cost basis.",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 5,
+    "y": 1,
+    "w": 5,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT SUM(unrealized_gain) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000)",
+     "rawQueryText": "SELECT SUM(unrealized_gain) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000)",
+     "timeColumns": []
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "currencyUSD",
+     "decimals": 0,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 0
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "Return over range \u2014 selected accounts",
+   "description": "Monthly returns chained together. Each month = change in investment value / (beginning value + half of net deposits), so deposits and withdrawals do not count as gains.",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 10,
+    "y": 1,
+    "w": 5,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT EXP(SUM(LN(1 + r))) - 1 AS value FROM (\n  SELECT SUM(change_in_investment_value) / SUM(beginning_value + 0.5 * net_flow) AS r\n  FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts)",
+     "rawQueryText": "SELECT EXP(SUM(LN(1 + r))) - 1 AS value FROM (\n  SELECT SUM(change_in_investment_value) / SUM(beginning_value + 0.5 * net_flow) AS r\n  FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts)",
+     "timeColumns": []
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "percentunit",
+     "decimals": 2,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 0
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Benchmarks over the same months",
+   "description": "Total return (dividends reinvested) of each selected benchmark fund between the same dates.",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 15,
+    "y": 1,
+    "w": 6,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "WITH a AS (SELECT MIN(begin_ts) AS t0, MAX(ts) AS t1 FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\ns AS (SELECT DISTINCT symbol, name FROM benchmark_prices WHERE name IN (${benchmark:sqlstring}))\nSELECT s.name, (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= a.t1 ORDER BY x.ts DESC LIMIT 1) / (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= a.t0 ORDER BY x.ts DESC LIMIT 1) - 1 AS value FROM s, a",
+     "rawQueryText": "WITH a AS (SELECT MIN(begin_ts) AS t0, MAX(ts) AS t1 FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\ns AS (SELECT DISTINCT symbol, name FROM benchmark_prices WHERE name IN (${benchmark:sqlstring}))\nSELECT s.name, (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= a.t1 ORDER BY x.ts DESC LIMIT 1) / (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= a.t0 ORDER BY x.ts DESC LIMIT 1) - 1 AS value FROM s, a",
+     "timeColumns": []
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "percentunit",
+     "decimals": 2,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 0
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "/^value$/",
+     "values": true
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "wideLayout": false
+   }
+  },
+  {
+   "id": 6,
+   "type": "stat",
+   "title": "Statements loaded",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 21,
+    "y": 1,
+    "w": 3,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT COUNT(DISTINCT period_end) AS value FROM account_periods WHERE ts >= $__from / 1000 AND ts <= $__to / 1000",
+     "rawQueryText": "SELECT COUNT(DISTINCT period_end) AS value FROM account_periods WHERE ts >= $__from / 1000 AND ts <= $__to / 1000",
+     "timeColumns": []
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "none",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 7,
+   "type": "row",
+   "title": "Distribution over time",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 5,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 8,
+   "type": "timeseries",
+   "title": "Share of portfolio by holding",
+   "description": "Each bar is one statement; segments are each holding's share of the selected holdings (short positions excluded). Click a legend entry to isolate it, Cmd/Ctrl-click to toggle.",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 6,
+    "w": 16,
+    "h": 11
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT ts AS time, holding AS metric, SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 AND market_value > 0 GROUP BY 1, 2 ORDER BY 1",
+     "rawQueryText": "SELECT ts AS time, holding AS metric, SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 AND market_value > 0 GROUP BY 1, 2 ORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 85,
+      "lineWidth": 0,
+      "barWidthFactor": 0.7,
+      "stacking": {
+       "mode": "percent",
+       "group": "A"
+      }
+     },
+     "unit": "currencyUSD",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "prepareTimeSeries",
+     "options": {
+      "format": "multi"
+     }
+    },
+    {
+     "id": "joinByField",
+     "options": {
+      "byField": "time",
+      "mode": "outer"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "^value (.*)$",
+      "renamePattern": "$1"
+     }
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "type": "piechart",
+   "title": "Latest statement \u2014 by holding",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 6,
+    "w": 8,
+    "h": 11
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT holding, SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000) AND market_value > 0 GROUP BY 1 ORDER BY 2 DESC",
+     "rawQueryText": "SELECT holding, SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000) AND market_value > 0 GROUP BY 1 ORDER BY 2 DESC",
+     "timeColumns": []
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "currencyUSD",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "/^value$/",
+     "values": true
+    },
+    "pieType": "donut",
+    "displayLabels": [
+     "percent"
+    ],
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "values": [
+      "percent"
+     ]
+    },
+    "tooltip": {
+     "mode": "single"
+    }
+   }
+  },
+  {
+   "id": 10,
+   "type": "timeseries",
+   "title": "Share of portfolio by asset class",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 17,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT ts AS time, asset_class AS metric, SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 AND market_value > 0 GROUP BY 1, 2 ORDER BY 1",
+     "rawQueryText": "SELECT ts AS time, asset_class AS metric, SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 AND market_value > 0 GROUP BY 1, 2 ORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 85,
+      "lineWidth": 0,
+      "barWidthFactor": 0.7,
+      "stacking": {
+       "mode": "percent",
+       "group": "A"
+      }
+     },
+     "unit": "currencyUSD",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "prepareTimeSeries",
+     "options": {
+      "format": "multi"
+     }
+    },
+    {
+     "id": "joinByField",
+     "options": {
+      "byField": "time",
+      "mode": "outer"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "^value (.*)$",
+      "renamePattern": "$1"
+     }
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "type": "timeseries",
+   "title": "Market value by account",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 17,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT ts AS time, account AS metric, SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY 1, 2 ORDER BY 1",
+     "rawQueryText": "SELECT ts AS time, account AS metric, SUM(market_value) AS value FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY 1, 2 ORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 85,
+      "lineWidth": 0,
+      "barWidthFactor": 0.7,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      }
+     },
+     "unit": "currencyUSD",
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "prepareTimeSeries",
+     "options": {
+      "format": "multi"
+     }
+    },
+    {
+     "id": "joinByField",
+     "options": {
+      "byField": "time",
+      "mode": "outer"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "^value (.*)$",
+      "renamePattern": "$1"
+     }
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "type": "row",
+   "title": "Gain vs benchmarks \u2014 whole accounts (uses the Account and Benchmark selectors)",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 26,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 13,
+   "type": "timeseries",
+   "title": "Cumulative return: my accounts vs benchmarks",
+   "description": "Everything starts at 0% on the day before the first statement in range. Portfolio return is flow-adjusted (deposits are not gains) and includes dividends/interest; benchmarks are total return, sampled on statement dates.",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 27,
+    "w": 14,
+    "h": 10
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "WITH p AS (\n  SELECT ts, MIN(begin_ts) AS b,\n         SUM(change_in_investment_value) / SUM(beginning_value + 0.5 * net_flow) AS r\n  FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts)\nSELECT MIN(b) AS time, 'My portfolio' AS metric, 0.0 AS value FROM p HAVING COUNT(*) > 0\nUNION ALL\nSELECT ts, 'My portfolio', EXP(SUM(LN(1 + r)) OVER (ORDER BY ts)) - 1 FROM p\nORDER BY 1",
+     "rawQueryText": "WITH p AS (\n  SELECT ts, MIN(begin_ts) AS b,\n         SUM(change_in_investment_value) / SUM(beginning_value + 0.5 * net_flow) AS r\n  FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts)\nSELECT MIN(b) AS time, 'My portfolio' AS metric, 0.0 AS value FROM p HAVING COUNT(*) > 0\nUNION ALL\nSELECT ts, 'My portfolio', EXP(SUM(LN(1 + r)) OVER (ORDER BY ts)) - 1 FROM p\nORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "WITH a AS (SELECT MIN(begin_ts) AS t0 FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\npts AS (SELECT t0 AS ts FROM a WHERE t0 IS NOT NULL UNION SELECT DISTINCT ts FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\ns AS (SELECT DISTINCT symbol, name FROM benchmark_prices WHERE name IN (${benchmark:sqlstring}))\nSELECT pts.ts AS time, s.name AS metric,\n       (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= pts.ts ORDER BY x.ts DESC LIMIT 1) / (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= a.t0 ORDER BY x.ts DESC LIMIT 1) - 1 AS value\nFROM pts, s, a ORDER BY 1",
+     "rawQueryText": "WITH a AS (SELECT MIN(begin_ts) AS t0 FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\npts AS (SELECT t0 AS ts FROM a WHERE t0 IS NOT NULL UNION SELECT DISTINCT ts FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\ns AS (SELECT DISTINCT symbol, name FROM benchmark_prices WHERE name IN (${benchmark:sqlstring}))\nSELECT pts.ts AS time, s.name AS metric,\n       (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= pts.ts ORDER BY x.ts DESC LIMIT 1) / (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= a.t0 ORDER BY x.ts DESC LIMIT 1) - 1 AS value\nFROM pts, s, a ORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 2,
+      "showPoints": "always",
+      "pointSize": 6,
+      "spanNulls": true,
+      "fillOpacity": 0
+     },
+     "unit": "percentunit",
+     "decimals": 2
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "My portfolio"
+      },
+      "properties": [
+       {
+        "id": "custom.lineWidth",
+        "value": 4
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "text"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "prepareTimeSeries",
+     "options": {
+      "format": "multi"
+     }
+    },
+    {
+     "id": "joinByField",
+     "options": {
+      "byField": "time",
+      "mode": "outer"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "^value (.*)$",
+      "renamePattern": "$1"
+     }
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "type": "barchart",
+   "title": "Return per statement period",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 14,
+    "y": 27,
+    "w": 10,
+    "h": 10
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT ts AS time, 'My portfolio' AS metric,\n       SUM(change_in_investment_value) / SUM(beginning_value + 0.5 * net_flow) AS value\nFROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts ORDER BY 1",
+     "rawQueryText": "SELECT ts AS time, 'My portfolio' AS metric,\n       SUM(change_in_investment_value) / SUM(beginning_value + 0.5 * net_flow) AS value\nFROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts ORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "WITH p AS (SELECT DISTINCT ts, begin_ts FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\ns AS (SELECT DISTINCT symbol, name FROM benchmark_prices WHERE name IN (${benchmark:sqlstring}))\nSELECT p.ts AS time, s.name AS metric,\n       (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= p.ts ORDER BY x.ts DESC LIMIT 1) / (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= p.begin_ts ORDER BY x.ts DESC LIMIT 1) - 1 AS value\nFROM p, s ORDER BY 1",
+     "rawQueryText": "WITH p AS (SELECT DISTINCT ts, begin_ts FROM account_periods WHERE account IN (${account:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\ns AS (SELECT DISTINCT symbol, name FROM benchmark_prices WHERE name IN (${benchmark:sqlstring}))\nSELECT p.ts AS time, s.name AS metric,\n       (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= p.ts ORDER BY x.ts DESC LIMIT 1) / (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= p.begin_ts ORDER BY x.ts DESC LIMIT 1) - 1 AS value\nFROM p, s ORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "percentunit",
+     "decimals": 2
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "My portfolio"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "text"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "time"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "time:YYYY-MM"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "xField": "time",
+    "barWidth": 0.85,
+    "groupWidth": 0.75,
+    "showValue": "never",
+    "xTickLabelRotation": -45,
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "prepareTimeSeries",
+     "options": {
+      "format": "multi"
+     }
+    },
+    {
+     "id": "joinByField",
+     "options": {
+      "byField": "time",
+      "mode": "outer"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "^value (.*)$",
+      "renamePattern": "$1"
+     }
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "type": "row",
+   "title": "Gain vs benchmarks \u2014 selected holdings (uses all selectors; needs 2+ statements)",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 37,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 16,
+   "type": "timeseries",
+   "title": "Cumulative price return: selected holdings as a basket vs benchmarks",
+   "description": "Tick / untick holdings in the Holding selector to see how the basket would have done. Month-to-month price change of each position, weighted by its value at the previous statement. Price only: dividends and interest paid out are not included, so this slightly understates income-heavy holdings versus the total-return benchmarks.",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 38,
+    "w": 12,
+    "h": 10
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "WITH p AS (\n  SELECT ts, MIN(begin_ts) AS b, SUM(price_gain) / SUM(prev_value) AS r\n  FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts HAVING SUM(prev_value) > 0)\nSELECT MIN(b) AS time, 'Selected holdings' AS metric, 0.0 AS value FROM p HAVING COUNT(*) > 0\nUNION ALL\nSELECT ts, 'Selected holdings', EXP(SUM(LN(1 + r)) OVER (ORDER BY ts)) - 1 FROM p\nORDER BY 1",
+     "rawQueryText": "WITH p AS (\n  SELECT ts, MIN(begin_ts) AS b, SUM(price_gain) / SUM(prev_value) AS r\n  FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts HAVING SUM(prev_value) > 0)\nSELECT MIN(b) AS time, 'Selected holdings' AS metric, 0.0 AS value FROM p HAVING COUNT(*) > 0\nUNION ALL\nSELECT ts, 'Selected holdings', EXP(SUM(LN(1 + r)) OVER (ORDER BY ts)) - 1 FROM p\nORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "WITH a AS (SELECT MIN(begin_ts) AS t0 FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\npts AS (SELECT t0 AS ts FROM a WHERE t0 IS NOT NULL UNION SELECT DISTINCT ts FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\ns AS (SELECT DISTINCT symbol, name FROM benchmark_prices WHERE name IN (${benchmark:sqlstring}))\nSELECT pts.ts AS time, s.name AS metric,\n       (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= pts.ts ORDER BY x.ts DESC LIMIT 1) / (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= a.t0 ORDER BY x.ts DESC LIMIT 1) - 1 AS value\nFROM pts, s, a ORDER BY 1",
+     "rawQueryText": "WITH a AS (SELECT MIN(begin_ts) AS t0 FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\npts AS (SELECT t0 AS ts FROM a WHERE t0 IS NOT NULL UNION SELECT DISTINCT ts FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000),\ns AS (SELECT DISTINCT symbol, name FROM benchmark_prices WHERE name IN (${benchmark:sqlstring}))\nSELECT pts.ts AS time, s.name AS metric,\n       (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= pts.ts ORDER BY x.ts DESC LIMIT 1) / (SELECT adj_close FROM benchmark_prices x WHERE x.symbol = s.symbol AND x.ts <= a.t0 ORDER BY x.ts DESC LIMIT 1) - 1 AS value\nFROM pts, s, a ORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 2,
+      "showPoints": "always",
+      "pointSize": 6,
+      "spanNulls": true,
+      "fillOpacity": 0
+     },
+     "unit": "percentunit",
+     "decimals": 2
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Selected holdings"
+      },
+      "properties": [
+       {
+        "id": "custom.lineWidth",
+        "value": 4
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "text"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "prepareTimeSeries",
+     "options": {
+      "format": "multi"
+     }
+    },
+    {
+     "id": "joinByField",
+     "options": {
+      "byField": "time",
+      "mode": "outer"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "^value (.*)$",
+      "renamePattern": "$1"
+     }
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "type": "timeseries",
+   "title": "Cumulative price return: each selected holding",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 38,
+    "w": 12,
+    "h": 10
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "WITH p AS (\n  SELECT ts, holding, SUM(price_gain) / SUM(prev_value) AS r\n  FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts, holding HAVING SUM(prev_value) > 0)\nSELECT (SELECT MIN(begin_ts) FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000) AS time, holding AS metric, 0.0 AS value\nFROM p GROUP BY holding\nUNION ALL\nSELECT ts, holding, EXP(SUM(LN(MAX(1 + r, 0.0001))) OVER (PARTITION BY holding ORDER BY ts)) - 1\nFROM p ORDER BY 1",
+     "rawQueryText": "WITH p AS (\n  SELECT ts, holding, SUM(price_gain) / SUM(prev_value) AS r\n  FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY ts, holding HAVING SUM(prev_value) > 0)\nSELECT (SELECT MIN(begin_ts) FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000) AS time, holding AS metric, 0.0 AS value\nFROM p GROUP BY holding\nUNION ALL\nSELECT ts, holding, EXP(SUM(LN(MAX(1 + r, 0.0001))) OVER (PARTITION BY holding ORDER BY ts)) - 1\nFROM p ORDER BY 1",
+     "timeColumns": [
+      "time"
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "showPoints": "never",
+      "pointSize": 6,
+      "spanNulls": true,
+      "fillOpacity": 0
+     },
+     "unit": "percentunit",
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "prepareTimeSeries",
+     "options": {
+      "format": "multi"
+     }
+    },
+    {
+     "id": "joinByField",
+     "options": {
+      "byField": "time",
+      "mode": "outer"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "^value (.*)$",
+      "renamePattern": "$1"
+     }
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "type": "barchart",
+   "title": "Price gain / loss in dollars by holding, over the range",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 48,
+    "w": 24,
+    "h": 20
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT holding, SUM(price_gain) AS gain FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY 1 ORDER BY 2 DESC",
+     "rawQueryText": "SELECT holding, SUM(price_gain) AS gain FROM holding_periods WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts >= $__from / 1000 AND ts <= $__to / 1000 GROUP BY 1 ORDER BY 2 DESC",
+     "timeColumns": []
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {},
+     "unit": "currencyUSD",
+     "decimals": 0,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 0
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "orientation": "horizontal",
+    "xField": "holding",
+    "showValue": "auto",
+    "legend": {
+     "showLegend": false
+    },
+    "barWidth": 0.8
+   }
+  },
+  {
+   "id": 19,
+   "type": "row",
+   "title": "Holdings detail \u2014 latest statement in range",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 68,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 20,
+   "type": "table",
+   "title": "Holdings",
+   "description": "",
+   "datasource": {
+    "type": "frser-sqlite-datasource",
+    "uid": "portfolio-sqlite"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 69,
+    "w": 24,
+    "h": 14
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "frser-sqlite-datasource",
+      "uid": "portfolio-sqlite"
+     },
+     "queryType": "table",
+     "queryText": "SELECT h.account AS Account, h.asset_class AS \"Asset class\", h.holding AS Holding,\n       h.quantity AS Quantity, h.price AS Price, h.market_value AS \"Market value\",\n       h.market_value / (SELECT SUM(market_value) FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000) AND market_value > 0) AS Weight,\n       h.cost_basis AS \"Cost basis\", h.unrealized_gain AS \"Unrealized gain\",\n       CASE WHEN h.cost_basis > 0 THEN h.unrealized_gain / h.cost_basis END AS \"Unrealized %\",\n       (SELECT hp.price_gain / hp.prev_value FROM holding_periods hp\n         WHERE hp.ts = h.ts AND hp.account = h.account AND hp.security_id = h.security_id) AS \"Price change (period)\"\nFROM holdings h WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000) ORDER BY h.market_value DESC",
+     "rawQueryText": "SELECT h.account AS Account, h.asset_class AS \"Asset class\", h.holding AS Holding,\n       h.quantity AS Quantity, h.price AS Price, h.market_value AS \"Market value\",\n       h.market_value / (SELECT SUM(market_value) FROM holdings WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000) AND market_value > 0) AS Weight,\n       h.cost_basis AS \"Cost basis\", h.unrealized_gain AS \"Unrealized gain\",\n       CASE WHEN h.cost_basis > 0 THEN h.unrealized_gain / h.cost_basis END AS \"Unrealized %\",\n       (SELECT hp.price_gain / hp.prev_value FROM holding_periods hp\n         WHERE hp.ts = h.ts AND hp.account = h.account AND hp.security_id = h.security_id) AS \"Price change (period)\"\nFROM holdings h WHERE account IN (${account:sqlstring}) AND asset_class IN (${asset_class:sqlstring}) AND holding IN (${holding:sqlstring}) AND ts = (SELECT MAX(ts) FROM holdings WHERE ts >= $__from / 1000 AND ts <= $__to / 1000) ORDER BY h.market_value DESC",
+     "timeColumns": []
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "/Market value|Cost basis|Unrealized gain|Price$/"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "locale"
+       },
+       {
+        "id": "decimals",
+        "value": 2
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "/Weight|%|Price change/"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percentunit"
+       },
+       {
+        "id": "decimals",
+        "value": 2
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "/Unrealized|Price change/"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-text"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "red",
+           "value": null
+          },
+          {
+           "color": "green",
+           "value": 0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Holding"
+      },
+      "properties": [
+       {
+        "id": "custom.minWidth",
+        "value": 320
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Account"
+      },
+      "properties": [
+       {
+        "id": "custom.minWidth",
+        "value": 190
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "footer": {
+     "show": true,
+     "reducer": [
+      "sum"
+     ],
+     "fields": [
+      "Market value",
+      "Cost basis",
+      "Unrealized gain"
+     ]
+    },
+    "sortBy": [
+     {
+      "displayName": "Market value",
+      "desc": true
+     }
+    ]
+   }
+  }
+ ]
+}

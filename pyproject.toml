@@ -1,0 +1,13 @@
+[project]
+name = "stockdistro"
+version = "0.1.0"
+description = "Fidelity statements -> canonical CSV -> SQLite -> Grafana"
+requires-python = ">=3.10"
+dependencies = ["pdfplumber>=0.11", "yfinance>=0.2.50"]
+
+[project.scripts]
+stockdistro = "stockdistro.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
